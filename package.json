@@ -1,0 +1,31 @@
+{
+  "name": "payfast-node",
+  "version": "1.0.0",
+  "description": "um gateway para pagamento através de recuso http",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexandre99/payfast-node.git"
+  },
+  "keywords": [
+    "gateway",
+    "pagamentos",
+    "api"
+  ],
+  "author": "Alexandre Teixeira",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexandre99/payfast-node/issues"
+  },
+  "homepage": "https://github.com/alexandre99/payfast-node#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "consign": "^0.1.6",
+    "express": "^4.16.3",
+    "express-validator": "^5.3.0",
+    "pg": "^7.5.0"
+  }
+}

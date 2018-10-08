@@ -78,10 +78,7 @@ module.exports = app => {
         res.status(500).send(erro);
       } else {
         console.log(msgLog);
-        if (statusCode) {
-          res.status(statusCode);
-        }
-        res.send(pagamento);
+        res.status(statusCode).json(pagamento);
       }
     });
   };
@@ -131,7 +128,7 @@ module.exports = app => {
   app.put("/pagamentos/pagamento/:id", (req, res) => {
     let pagamento = {};
     pagamento.status = "CONFIRMADO";
-    atualizaPagamento(req, res, pagamento, "Pagamento autorizado");
+    atualizaPagamento(req, res, pagamento, "Pagamento autorizado", 200);
   });
 
   app.delete("/pagamentos/pagamento/:id", (req, res) => {

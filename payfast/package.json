@@ -27,6 +27,7 @@
     "express": "^4.16.3",
     "express-validator": "^5.3.0",
     "pg": "^7.5.0",
-    "restify-clients": "^2.5.2"
+    "restify-clients": "^2.5.2",
+    "soap": "^0.25.0"
   }
 }

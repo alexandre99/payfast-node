@@ -13,6 +13,15 @@ PagamentoDao.prototype.salva = function (pagamento,callback) {
     this._connection.query(query, callback);
 };
 
+PagamentoDao.prototype.atualiza = function (pagamento,callback) {
+    this._connection.connect();
+    let query = {
+        text: 'UPDATE pagamentos SET status = $1 WHERE id = $2',
+        values: [pagamento.status, pagamento.id]
+    }
+    this._connection.query(query, callback);
+};
+
 PagamentoDao.prototype.lista = function (callback)  {
     this._connection.connect();
     let query = {text: 'SELECT * FROM pagamentos'}

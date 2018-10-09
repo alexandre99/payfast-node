@@ -32,7 +32,7 @@ PagamentoDao.prototype.buscaPorId = function (id, callback) {
     this._connection.connect();
     let query = {
         text: 'SELECT * FROM pagamentos WHERE id = $1',
-        value: [id]
+        values: [id]
     }
     this._connection.query(query, callback);
 };

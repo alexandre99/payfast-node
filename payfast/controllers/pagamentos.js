@@ -83,6 +83,14 @@ module.exports = app => {
     });
   };
 
+  const addPagamentoNoMemcached = pagamento => {
+    let memcachedClient = app.servicos.memcachedClient();
+    let id = pagamento.id;
+    memcachedClient.set("pagamento-" + id, pagamento, 60000, function(erro) {
+      console.log("nota chave adicionada ao cache: pagamento-" + id);
+    });
+  };
+
   const processarPagamentoSalvo = (req, res, erro, resultado) => {
     if (erro) {
       console.log(erro);
@@ -91,6 +99,7 @@ module.exports = app => {
     }
     console.log("pagamento criado");
     let pagamentoCriado = resultado.rows[0];
+    addPagamentoNoMemcached(pagamentoCriado);
     res.location("/pagamentos/pagamento/" + pagamentoCriado.id);
 
     if (ehPagamentoCartao(pagamentoCriado)) {
@@ -140,4 +149,36 @@ module.exports = app => {
   app.get("/pagamentos", (req, res) => {
     res.send("ok");
   });
+
+  app.get("/pagamentos/pagamento/:id", (req, res) => {
+    let id = req.params.id;
+    console.log("Consultando pagamento: " + id);
+
+    let memcachedClient = app.servicos.memcachedClient();
+    memcachedClient.get("pagamento-" + id, (erro, retorno) => {
+      if (erro || !retorno) {
+        console.log("MISS - chave não encontrada");
+        consultarPagamentoPorId(id, res);
+      } else {
+        console.log("HIT -  valor: " + JSON.stringify(retorno));
+        res.json(retorno);
+      }
+    });
+  });
+
+  const consultarPagamentoPorId = (id, res) => {
+    let connection = app.persistencia.connectionFactory();
+    let pagamentoDAO = criarPagamentoDao(connection);
+
+    pagamentoDAO.buscaPorId(id, (erro, resultado) => {
+      connection.end();
+      if (erro) {
+        console.log("Erro ao consultar no banco: " + erro);
+        res.status(500).send(erro);
+      } else {
+        console.log("pagamento encontrado: " + resultado.rows[0]);
+        res.json(resultado.rows[0]);
+      }
+    });
+  };
 };

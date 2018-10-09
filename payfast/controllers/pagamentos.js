@@ -1,17 +1,19 @@
+var logger = require('../servicos/logger');
+
 module.exports = app => {
   const validarDadosPagamento = req => {
     req
       .assert(
-        "pagamento.forma_de_pagamento",
-        "Forma de pagamento é obrigatória."
+        'pagamento.forma_de_pagamento',
+        'Forma de pagamento é obrigatória.'
       )
       .notEmpty();
     req
-      .assert("pagamento.valor", "Valor é obrigatório e deve ser um decimal.")
+      .assert('pagamento.valor', 'Valor é obrigatório e deve ser um decimal.')
       .notEmpty()
       .isFloat();
     req
-      .assert("pagamento.moeda", "Moeda é obrigatória e deve ter 3 caracteres")
+      .assert('pagamento.moeda', 'Moeda é obrigatória e deve ter 3 caracteres')
       .notEmpty()
       .len(3, 3);
 
@@ -23,7 +25,7 @@ module.exports = app => {
   };
 
   const ehPagamentoCartao = pagamento =>
-    pagamento.forma_de_pagamento === "cartao";
+    pagamento.forma_de_pagamento === 'cartao';
 
   const montarResponseDevolucaoPagamentoCriado = pagamentoCriado => {
     let response = {
@@ -31,15 +33,15 @@ module.exports = app => {
       links: [
         {
           href:
-            "http://localhost:3000/pagamentos/pagamento/" + pagamentoCriado.id,
-          rel: "confirmar",
-          method: "PUT"
+            'http://localhost:3000/pagamentos/pagamento/' + pagamentoCriado.id,
+          rel: 'confirmar',
+          method: 'PUT'
         },
         {
           href:
-            "http://localhost:3000/pagamentos/pagamento/" + pagamentoCriado.id,
-          rel: "cancelar",
-          method: "delete"
+            'http://localhost:3000/pagamentos/pagamento/' + pagamentoCriado.id,
+          rel: 'cancelar',
+          method: 'delete'
         }
       ]
     };
@@ -47,7 +49,7 @@ module.exports = app => {
   };
 
   const autorizarCartao = (req, res, pagamentoCriado) => {
-    let cartao = req.body["cartao"];
+    let cartao = req.body['cartao'];
 
     let clienteCartoes = new app.servicos.clienteCartoes();
     clienteCartoes.autoriza(cartao, (exception, request, response, retorno) => {
@@ -86,8 +88,8 @@ module.exports = app => {
   const addPagamentoNoMemcached = pagamento => {
     let memcachedClient = app.servicos.memcachedClient();
     let id = pagamento.id;
-    memcachedClient.set("pagamento-" + id, pagamento, 60000, function(erro) {
-      console.log("nota chave adicionada ao cache: pagamento-" + id);
+    memcachedClient.set('pagamento-' + id, pagamento, 60000, function(erro) {
+      console.log('nota chave adicionada ao cache: pagamento-' + id);
     });
   };
 
@@ -97,10 +99,10 @@ module.exports = app => {
       res.status(500).json(erro);
       return;
     }
-    console.log("pagamento criado");
+    console.log('pagamento criado');
     let pagamentoCriado = resultado.rows[0];
     addPagamentoNoMemcached(pagamentoCriado);
-    res.location("/pagamentos/pagamento/" + pagamentoCriado.id);
+    res.location('/pagamentos/pagamento/' + pagamentoCriado.id);
 
     if (ehPagamentoCartao(pagamentoCriado)) {
       autorizarCartao(req, res, pagamentoCriado);
@@ -111,18 +113,18 @@ module.exports = app => {
     }
   };
 
-  app.post("/pagamentos/pagamento", (req, res) => {
+  app.post('/pagamentos/pagamento', (req, res) => {
     let erros = validarDadosPagamento(req);
 
     if (erros) {
-      console.log("Erros de validação encontrados");
+      console.log('Erros de validação encontrados');
       res.status(400).send(erros);
       return;
     }
 
-    let pagamento = req.body["pagamento"];
-    console.log("processando a requisição de um novo pagamento");
-    pagamento.status = "CRIADO";
+    let pagamento = req.body['pagamento'];
+    console.log('processando a requisição de um novo pagamento');
+    pagamento.status = 'CRIADO';
     pagamento.data = new Date();
 
     let connection = app.persistencia.connectionFactory();
@@ -134,33 +136,34 @@ module.exports = app => {
     });
   });
 
-  app.put("/pagamentos/pagamento/:id", (req, res) => {
+  app.put('/pagamentos/pagamento/:id', (req, res) => {
     let pagamento = {};
-    pagamento.status = "CONFIRMADO";
-    atualizaPagamento(req, res, pagamento, "Pagamento autorizado", 200);
+    pagamento.status = 'CONFIRMADO';
+    atualizaPagamento(req, res, pagamento, 'Pagamento autorizado', 200);
   });
 
-  app.delete("/pagamentos/pagamento/:id", (req, res) => {
+  app.delete('/pagamentos/pagamento/:id', (req, res) => {
     let pagamento = {};
-    pagamento.status = "CANCELADO";
-    atualizaPagamento(req, res, pagamento, "Pagamento cancelado", 204);
+    pagamento.status = 'CANCELADO';
+    atualizaPagamento(req, res, pagamento, 'Pagamento cancelado', 204);
   });
 
-  app.get("/pagamentos", (req, res) => {
-    res.send("ok");
+  app.get('/pagamentos', (req, res) => {
+    res.send('ok');
   });
 
-  app.get("/pagamentos/pagamento/:id", (req, res) => {
+  app.get('/pagamentos/pagamento/:id', (req, res) => {
     let id = req.params.id;
-    console.log("Consultando pagamento: " + id);
+    console.log('Consultando pagamento: ' + id);
+    logger.log('info', 'Consultando pagamento: ' + id);
 
     let memcachedClient = app.servicos.memcachedClient();
-    memcachedClient.get("pagamento-" + id, (erro, retorno) => {
+    memcachedClient.get('pagamento-' + id, (erro, retorno) => {
       if (erro || !retorno) {
-        console.log("MISS - chave não encontrada");
+        console.log('MISS - chave não encontrada');
         consultarPagamentoPorId(id, res);
       } else {
-        console.log("HIT -  valor: " + JSON.stringify(retorno));
+        console.log('HIT -  valor: ' + JSON.stringify(retorno));
         res.json(retorno);
       }
     });
@@ -173,10 +176,10 @@ module.exports = app => {
     pagamentoDAO.buscaPorId(id, (erro, resultado) => {
       connection.end();
       if (erro) {
-        console.log("Erro ao consultar no banco: " + erro);
+        console.log('Erro ao consultar no banco: ' + erro);
         res.status(500).send(erro);
       } else {
-        console.log("pagamento encontrado: " + resultado.rows[0]);
+        console.log('pagamento encontrado: ' + resultado.rows[0]);
         res.json(resultado.rows[0]);
       }
     });
